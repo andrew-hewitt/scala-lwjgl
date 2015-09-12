@@ -1,3 +1,7 @@
+/**
+ * Inspired by the source code found at: "http://www.lwjgl.org/guide".
+ */
+
 package com.example
 
 import org.lwjgl.glfw._
@@ -16,20 +20,21 @@ import java.nio.ByteBuffer
 object Main extends App {
   import CallbackHelpers._
 
-  SharedLibraryLoader.load()
-
-  val WIDTH  = 800
-  val HEIGHT = 600
+  private val WIDTH  = 800
+  private val HEIGHT = 600
 
   def run() {
-    val (window, retainables) = init()
+    SharedLibraryLoader.load()
 
-    loop(window)
+    try {
+      val (window, retainables) = init()
+      loop(window)
 
-    glfwDestroyWindow(window)
-    glfwTerminate() // destroys all remaining windows and cursors, etc...
-
-    retainables.foreach(_.release())
+      glfwDestroyWindow(window)
+      retainables.foreach(_.release())
+    } finally {
+      glfwTerminate() // destroys all remaining windows, cursors, etc...
+    }
   }
 
   private def init(): (Long, List[Retainable]) = {
@@ -39,9 +44,8 @@ object Main extends App {
     if (glfwInit() != GL11.GL_TRUE)
       throw new IllegalStateException("Unable to initialize GLFW")
 
-    //glfwDefaultWindowHints() // redundant
     glfwWindowHint(GLFW_VISIBLE,   GL_FALSE) // hiding the window
-    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE) // no resize!
+    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE) // window resizing not allowed
 
     val window = glfwCreateWindow(WIDTH, HEIGHT, "Fun.", NULL, NULL)
     if (window == NULL)
@@ -77,11 +81,7 @@ object Main extends App {
   }
 
   private def keyHandler (
-    window:   Long,
-    key:      Int,
-    scanCode: Int,
-    action:   Int,
-    mods:     Int
+    window: Long, key: Int, scanCode: Int, action: Int, mods: Int
   ): Unit = {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
       glfwSetWindowShouldClose(window, GL_TRUE)
